@@ -294,5 +294,106 @@ if exists:
 
 
 plt.savefig("BIO", bbox_inches="tight")
-plt.show()
 plt.close()
+
+# ---------------------------------------------------------------------
+#   SENTIMENT
+# ---------------------------------------------------------------------
+
+from textblob import TextBlob
+import tweepy
+
+VALUE = TOPIC
+
+public_tweets = api.search(VALUE)
+
+objective_tweet=0
+subjective_tweet=0
+negitively_subjective=0
+for tweet in public_tweets:
+    print(tweet.text)
+    analysis = TextBlob(tweet.text)
+    print(analysis.sentiment)
+    if analysis.sentiment[0]>0:
+       subjective_tweet = subjective_tweet + 1
+       print('Subjective')
+    elif analysis.sentiment[0]<0:
+       negitively_subjective = negitively_subjective  + 1
+       print('Negatively subjective')
+    else:
+       objective_tweet = objective_tweet + 1
+       print('objective')
+    print('\n')
+
+    
+sentiment_total = objective_tweet + subjective_tweet + negitively_subjective  
+
+objective_tweet = round(((objective_tweet/sentiment_total) * 100),2)
+subjective_tweet = round(((subjective_tweet/sentiment_total) * 100),2)
+negitively_subjective = round(((negitively_subjective/sentiment_total) * 100),2)
+
+
+
+
+
+
+# ---------------------------------GRAPH-------------------------------------
+
+
+import matplotlib.pyplot as plt
+
+B = {
+     str('Objective'):int(objective_tweet),
+     str('Subjective'):int(subjective_tweet),
+     str('Negatively Subjective'):int(negitively_subjective),
+     str('Total'):int(100)
+    
+    
+    }
+
+
+one = ('#3498DB')
+two = ('#3498DB')
+three = ('#FF0000')
+four = ('#ADD8E6')
+five = ('#ff8c66')
+
+color_options = [one, two,three,four,five]
+
+
+plt.bar(range(len(B)), list(B.values()), align='center', color=color_options,  edgecolor='blue')
+
+"""
+COLOR OPTIONS
+color=('#ff8c66'),
+, alpha=0.1
+"""
+
+
+
+plt.xticks(range(len(B)), list(B.keys()), rotation='horizontal', fontsize=30)
+plt.title(str("Sentiment Breakdown"), fontsize=30)
+plt.ylabel('Number of Occurrences (%)', fontsize=18)
+#plt.xlabel('These are the words in which Tweeters describe themselves', horizontalalignment='left', position=(0,25), fontsize=18)
+plt.rcParams["figure.figsize"] = (20,10)
+
+
+exists = os.path.isfile('sentiment.png')
+if exists:
+    os.remove("sentiment.png")
+
+
+
+plt.savefig("sentiment")
+plt.show()
+
+
+
+
+print('objective_tweets : '+ str(objective_tweet) + " %")
+print('subjective_tweets : '+ str(subjective_tweet) + " %")
+print('negitively_subjective tweets: '+ str(negitively_subjective) + " %")
+print("Total sentiments: " + str(sentiment_total))
+
+
+
