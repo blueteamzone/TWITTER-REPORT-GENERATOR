@@ -42,3 +42,257 @@ api  = get_token.api
 # ---------------------------------------------------------------------
 import random 
 TOPIC = get_trends.TOPIC
+
+# ---------------------------------------------------------------------
+#   SET PARMS  
+# ---------------------------------------------------------------------
+
+max_count = 100
+scantype = 2
+
+
+# ---------------------------------------------------------------------
+#   PERFORM SCAN
+# ---------------------------------------------------------------------
+
+
+if scantype == 1:
+    status_array = []
+    progress = 0
+
+    f = IntProgress(description='Processing:',min=0, max=max_count,) # instantiate the bar
+    display(f) # display the bar
+
+
+
+
+    class StreamListener(tweepy.StreamListener):
+        tweet_number=0   # class variable
+
+        def on_status(self, status):
+            self.max_tweets=max_count # max number of tweets
+            self.tweet_number+=1   
+            f.value += 1 # signal to increment the progress bar
+            progress = (f.value/max_count) * 100
+            progress = format(progress, '.2f')
+            print('Progress: ' + str(progress) + " %")
+            clear_output(wait=True)
+            status_array.append(status._json)
+
+            if self.tweet_number>=self.max_tweets:
+                print('PROCESSING COMPLETE : '+str(self.max_tweets)+' tweets processed.')
+                return False
+                
+                #sys.exit('PROCESSING COMPLETE : '+str(self.max_tweets)+' tweets processed.')
+
+
+        def on_error(self, status_code):
+            if status_code == 420:
+                return False
+
+    stream_listener = StreamListener()
+    stream = tweepy.Stream(auth=api.auth, listener=stream_listener)
+
+    #print('Pulling down data.....')
+    stream.filter(track=[TOPIC],languages=["en"])
+
+elif scantype == 2:
+    # HISTORICAL DATA SWITCHED OFF (IF YOU SWITCH ON, THEN SWITCH STREAM OFF ABOVE)
+
+    status_array = []
+    LOOP_COUNT = 0
+
+
+    # ------ENTER YOUR SERACH TERM HER E--------
+    tweets = tweepy.Cursor(api.search, q=TOPIC,lang='en', count=int(max_count))
+
+    # TRACK PROGRESS
+    f = IntProgress(min=0, max=max_count) # instantiate the bar
+    display(f) # display the bar
+    progress = 0
+
+    print('Pulling down data.....')                    
+    for tweet in tweets.items(int(max_count)):
+        f.value+=1 # signal to increment the progress bar
+        progress = (f.value/max_count) * 100
+        progress = format(progress, '.2f')
+        print('Progress: ' + str(progress) + " %")
+        clear_output(wait=True)
+        status_array.append(tweet._json)
+
+
+
+    print('HISTORICAL Processing complete')
+else:
+    print('scantype fail')
+    raise
+
+
+    
+# ---------------------------------------------------------------------
+#   QUICK PEEK
+# ---------------------------------------------------------------------
+
+
+print('Number of records')
+print(len(status_array))
+print('')
+print('An example element looks like: ')
+print(status_array[0]['text'])
+
+
+# ---------------------------------------------------------------------
+#   TWEET NUMERICAL ANALYSIS
+# ---------------------------------------------------------------------
+
+
+linecount = 0
+APPENDED_TEXT = ""
+
+# CREATE FULL TEXT BLOB UPPER CASE 
+for x in range(0, len(status_array)):
+    linecount = linecount + 1
+    text = str(status_array[x]['text']).upper()
+    APPENDED_TEXT = APPENDED_TEXT + str(text)
+
+# REMOVE PUNCTUATION FOR WORD COUNT
+#APPENDED_TEXT = APPENDED_TEXT.replace('#', '')
+APPENDED_TEXT = APPENDED_TEXT.replace('.', '')
+APPENDED_TEXT = APPENDED_TEXT.replace(',', '')
+APPENDED_TEXT = APPENDED_TEXT.replace(',', '')
+
+print('')
+
+print("Length of appended text array : " + str(len(APPENDED_TEXT)))
+print('')
+
+# COUNT WORDS AND REMOVE ADJECTIVES/NOUNDS
+from collections import Counter, OrderedDict
+DISC = APPENDED_TEXT.split()
+x = Counter(DISC)
+del x['⠀'],x['AND'],x['THE'],x['OF'],x['TO'],x['A'],x['IN'],x['&'],x['MY'],x['FOR'],x['I'],x['NOT'],x['IS'],x['ARE']
+del x['WITH'],x['ALL'],x['ON'],x['-'],x['YOU'],x['BY'],x['IT'],x['NO'],x['OR'],x['OWN'],x['THAT'],x['AT'],x['BE'],x['|'],x['WILL'],
+del x['BUT'],x['AN'],x['ABOUT'],x['AS'],x['FROM'],x['WHO'],x['ME'],x['WE'],x['HAVE'],x['OUR'],x['AM'],x['LIKE'],x['JUST']
+del x['THIS'],x['THEY'],x['IF'],x['HAS'],x['&AMP'],x['HAS'],x['CAN'],x['NOW'],x['SO'],x['ONLY'],x['WAS'],x['WHAT'],x['THEIR'],x['YOUR'],x['WOULD']
+del x['DO'],x['&AMP;'],x['ONE'],x['WANT'],x['BEEN'],x['THEM'],x['MORE'],x['TODAY'],x['GET'],x['WHEN'],x['COMMENT'],x['HER'],x['SHE'],x['FURTHER']
+del x['HE'],x['HIS'],x['OUT'],x['HOW'],x['BECAUSE'],x['HIM'],x['WHY'],x['THINK'],x["IT'S"],x['TAKE'],x['OVER'],x[''],x[''],
+del x['END'], x['ALSO'],x['SINCE'],x['END'],x['THAT'],x['UP'],x['IT’S'],x['SEE'],x['KNOW'],x['SHOULD'],x['HAD'],x['SAYS'],x['SAID'],x['DID'],x['—'],x['EVERY']
+del x['YOU'],x['J'],x['WERE'],x['THERE'],x['“YOU'],x['THOSE'],x['OFTEN'],x['RIGHT'],x['•']
+del x[TOPIC.upper()]
+
+large_top_tweets = OrderedDict(x.most_common(50))
+top_tweets = OrderedDict(x.most_common(20))
+print('Top Tweets are:')
+print(top_tweets)
+
+
+# ---------------------------------------------------------------------
+#   TWEET VISUALIZATION
+# ---------------------------------------------------------------------
+
+
+import os
+import matplotlib.pyplot as plt
+
+E = top_tweets
+one = (0.1, 0.1, 0.1, 0.1)
+two = (0.1, 0.1, 0.1, 0.1)
+three = (0.1, 0.1, 0.1, 0.1)
+four= (0.1, 0.1, 0.1, 0.1)
+five= (0.1, 0.1, 0.1, 0.1)
+six= (0.1, 0.1, 0.1, 0.1)
+seven= (0.1, 0.1, 0.1, 0.1)
+eight= (0.1, 0.1, 0.1, 0.1)
+nine= (0.1, 0.1, 0.1, 0.1)
+ten= (0.1, 0.1, 0.1, 0.1)
+eleven= (0.1, 0.1, 0.1, 0.1)
+twelve= (0.1, 0.1, 0.1, 0.1)
+thirteen= (0.1, 0.1, 0.1, 0.1)
+fourteen= (0.1, 0.1, 0.1, 0.1)
+fithteen= (0.1, 0.1, 0.1, 0.1)
+sixteen= (0.1, 0.1, 0.1, 0.1)
+seventeen= (0.1, 0.1, 0.1, 0.1)
+eighteen= (0.1, 0.1, 0.1, 0.1)
+nineteen= (0.1, 0.1, 0.1, 0.1)
+twenty= (0.1, 0.1, 0.1, 0.1)
+
+
+
+color_last = [one, two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,thirteen,fourteen,fithteen,sixteen,seventeen,eighteen,nineteen,twenty]
+color = (0.1, 0.1, 0.1, 0.1)
+plt.bar(range(len(E)), list(E.values()), align='center', color=color_last,  edgecolor='blue')
+
+plt.xticks(range(len(E)), list(E.keys()), rotation='vertical', fontsize=10)
+plt.title("Most Frequently Tweeted Words", fontsize=30)
+plt.ylabel('# Of Occurrences (k)', fontsize=20 )
+plt.xlabel('Tweeted term by Frequency', horizontalalignment='left', position=(0,10),fontsize=18)
+plt.rcParams["figure.figsize"] = (20,10)
+
+exists = os.path.isfile('TWEETS.png')
+if exists:
+    os.remove("TWEETS.png")
+
+    
+plt.savefig("TWEETS", bbox_inches="tight")
+plt.close()
+
+
+
+# ---------------------------------------------------------------------
+#   USER DESCRIPTION NUMERICAL ANALYSIS
+# ---------------------------------------------------------------------
+
+
+linecount = 0
+APPENDED_DESCRIPTION = ""
+for x in range(0, len(status_array)):
+    linecount = linecount + 1
+    description = str(status_array[x]['user']['description']).upper()
+    APPENDED_DESCRIPTION = APPENDED_DESCRIPTION + str(description)
+    
+
+APPENDED_DESCRIPTION = APPENDED_DESCRIPTION.replace('.', '')
+APPENDED_DESCRIPTION = APPENDED_DESCRIPTION.replace(',', '')
+APPENDED_DESCRIPTION = APPENDED_DESCRIPTION.replace(',', '')
+
+from collections import Counter, OrderedDict
+DISC = APPENDED_DESCRIPTION.split()
+x = Counter(DISC)
+del x['⠀'],x['AND'],x['THE'],x['OF'],x['TO'],x['A'],x['IN'],x['&'],x['MY'],x['FOR'],x['I'],x['NOT'],x['IS'],x['ARE']
+del x['WITH'],x['ALL'],x['ON'],x['-'],x['YOU'],x['BY'],x['IT'],x['NO'],x['OR'],x['OWN'],x['THAT'],x['AT'],x['BE'],x['|'],x['WILL'],
+del x['BUT'],x['AN'],x['ABOUT'],x['AS'],x['FROM'],x['WHO'],x['ME'],x['WE'],x['HAVE'],x['OUR'],x['AM'],x['LIKE'],x['JUST']
+del x['THIS'],x['THEY'],x['IF'],x['HAS'],x['&AMP'],x['HAS'],x['CAN'],x['NOW'],x['SO'],x['ONLY'],x['WAS'],x['WHAT'],x['THEIR'],x['YOUR'],x['WOULD']
+del x['DO'],x['&AMP;'],x['ONE'],x['WANT'],x['BEEN'],x['THEM'],x['MORE'],x['/'],x['•'],x["I'M"],x['UP'],x['THINGS'],x[''],x['']
+
+large_bio_desc = OrderedDict(x.most_common(50))
+top_bio_desc = OrderedDict(x.most_common(20))
+print('')
+print(top_bio_desc)
+
+
+# ---------------------------------------------------------------------
+#   USER DESCRIPTION VISUALIZATION
+# ---------------------------------------------------------------------
+
+
+import matplotlib.pyplot as plt
+
+D = top_bio_desc
+
+plt.bar(range(len(D)), list(D.values()), align='center', color=(0.1, 0.5, 1, 0.1),  edgecolor='blue')
+
+plt.xticks(range(len(D)), list(D.keys()), rotation='vertical', fontsize=10)
+plt.title("Tweeters Bio - Most popular Self Description", fontsize=30)
+plt.ylabel('Number of Occurrences (thousands)', fontsize=18)
+plt.xlabel('These are the words in which Tweeters describe themselves', horizontalalignment='left', position=(0,25), fontsize=18)
+plt.rcParams["figure.figsize"] = (20,10)
+
+
+exists = os.path.isfile('BIO.png')
+if exists:
+    os.remove("BIO.png")
+
+
+plt.savefig("BIO", bbox_inches="tight")
+plt.show()
+plt.close()
